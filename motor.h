@@ -1,69 +1,56 @@
-#ifndef Motors_h
-#define Motors_h
+#ifndef MOTOR_h
+#define MOTOR_h
 
 
 #include "Arduino.h"
-#include "config.h"
-//#include <avr/pgmspace.h>
+
+// Motor pin names
+#define MOTORLATCH 12
+#define MOTORCLK 4
+#define MOTORENABLE 7
+#define MOTORDATA 8
+#define C1_A 3
+#define C1_B 2
+#define C2_A 1
+#define C2_B 4
+#define C4_A 0
+#define C4_B 6
+#define C3_A 5
+#define C3_B 7
+
+//---NE PAS MODIFIER CETTE PARTIE---
+#define MOTOR12_64KHZ _BV(CS20)  // no prescale
+#define MOTOR12_8KHZ _BV(CS21)   // divide by 8
+#define MOTOR12_2KHZ _BV(CS21) | _BV(CS20) // divide by 32
+#define MOTOR12_1KHZ _BV(CS22)  // divide by 64
+
+#define MOTOR34_64KHZ _BV(CS00)  // no prescale
+#define MOTOR34_8KHZ _BV(CS01)   // divide by 8
+#define MOTOR34_1KHZ _BV(CS01) | _BV(CS00)  // divide by 64
+#define C1_POWER OCR1A
+#define C2_POWER OCR3C
+#define C3_POWER OCR4A
+#define C4_POWER OCR3A
+
+// Parametres moteurs :
+#define freq12 MOTOR12_64KHZ  //frequence PWM
+#define freq34 MOTOR34_64KHZ
+
+// Courbe des micro-pas
+//const PROGMEM prog_int16_t UPAS_CURVE[] ={0,40,56,69,80,89,98,105,113,119,126,132,137,143,148,153,158,162,167,171,175,179,183,187,190,193,197,200,203,206,209,212,214,217,220,222,224,226,229,231,233,234,236,238,239,241,242,244,245,246,247,248,249,250,251,252,253,253,254,254,254,255,255,255,255,255,255,255,254,254,254,253,253,252,251,250,249,248,247,246,245,244,242,241,239,238,236,234,233,231,229,226,224,222,220,217,214,212,209,206,203,200,197,193,190,187,183,179,175,171,167,162,158,153,148,143,137,132,126,119,113,105,98,89,80,69,56,40,0,-40,-56,-69,-80,-89,-98,-105,-113,-119,-126,-132,-137,-143,-148,-153,-158,-162,-167,-171,-175,-179,-183,-187,-190,-193,-197,-200,-203,-206,-209,-212,-214,-217,-220,-222,-224,-226,-229,-231,-233,-234,-236,-238,-239,-241,-242,-244,-245,-246,-247,-248,-249,-250,-251,-252,-253,-253,-254,-254,-254,-255,-255,-255,-255,-255,-255,-255,-254,-254,-254,-253,-253,-252,-251,-250,-249,-248,-247,-246,-245,-244,-242,-241,-239,-238,-236,-234,-233,-231,-229,-226,-224,-222,-220,-217,-214,-212,-209,-206,-203,-200,-197,-193,-190,-187,-183,-179,-175,-171,-167,-162,-158,-153,-148,-143,-137,-132,-126,-119,-113,-105,-98,-89,-80,-69,-56,-40};
+const int UPAS_CURVE[] ={0,40,56,69,80,89,98,105,113,119,126,132,137,143,148,153,158,162,167,171,175,179,183,187,190,193,197,200,203,206,209,212,214,217,220,222,224,226,229,231,233,234,236,238,239,241,242,244,245,246,247,248,249,250,251,252,253,253,254,254,254,255,255,255,255,255,255,255,254,254,254,253,253,252,251,250,249,248,247,246,245,244,242,241,239,238,236,234,233,231,229,226,224,222,220,217,214,212,209,206,203,200,197,193,190,187,183,179,175,171,167,162,158,153,148,143,137,132,126,119,113,105,98,89,80,69,56,40,0,-40,-56,-69,-80,-89,-98,-105,-113,-119,-126,-132,-137,-143,-148,-153,-158,-162,-167,-171,-175,-179,-183,-187,-190,-193,-197,-200,-203,-206,-209,-212,-214,-217,-220,-222,-224,-226,-229,-231,-233,-234,-236,-238,-239,-241,-242,-244,-245,-246,-247,-248,-249,-250,-251,-252,-253,-253,-254,-254,-254,-255,-255,-255,-255,-255,-255,-255,-254,-254,-254,-253,-253,-252,-251,-250,-249,-248,-247,-246,-245,-244,-242,-241,-239,-238,-236,-234,-233,-231,-229,-226,-224,-222,-220,-217,-214,-212,-209,-206,-203,-200,-197,-193,-190,-187,-183,-179,-175,-171,-167,-162,-158,-153,-148,-143,-137,-132,-126,-119,-113,-105,-98,-89,-80,-69,-56,-40};
+
+// Branchement des moteurs
+#define RA_NO 1 
+#define DE_NO 2
 
 
+static uint8_t latch_state;
+void powerCoil(byte coil_num, int power);
+void latchTx(void);
+void initMotors(void);
+void initInterrupt(void);
 
-
-/*
-#define LATCH 4
-#define LATCH_DDR DDRB
-#define LATCH_PORT PORTB
-
-#define CLK_PORT PORTD
-#define CLK_DDR DDRD
-#define CLK 4
-
-#define ENABLE_PORT PORTD
-#define ENABLE_DDR DDRD
-#define ENABLE 7
-
-#define SER 0
-#define SER_DDR DDRB
-#define SER_PORT PORTB
-*/
-
-
-
-
-
-class Motor
-{
-  public:
-  Motor(byte numero, int speed_mult, int speed_div);
-  int getSpeedDivisor();
-  int getSpeedMultiplier();
-  int getCurrentUstep();
-  long getCurrentStep();
-  
-  void setSpeedDivisor(int temp);
-  void setSpeedMultiplier(int temp);
-  
-
-  void incrementStep();
-
-  
-  
-
-  private:
-  void setCurrentStep(long temp);
-  int speed_multiplier;
-  int speed_divisor;
-  int ustep_current;
-  long step_current;
-  byte no;
-
-};
-  static uint8_t latch_state;
-  void powerCoil(byte coil_num, int power);
-  void latchTx(void);
-  void initMotors(void);
-  void initInterrupt(unsigned int timer5_top);
-  void changeTimebase(unsigned int timer5_top);
 
 
 
