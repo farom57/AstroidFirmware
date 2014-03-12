@@ -44,8 +44,8 @@ float move_dir_de=0;
 ISR(TIMER5_COMPA_vect ){ 
     ms_count++;
 
-    float speed_ra=SIDERAL_RATE*(1. + (!digitalRead(ST4_W)?0.5:0.) + (!digitalRead(ST4_E)?-0.5:0.))+move_speed*move_dir_ra;
-    float speed_de=SIDERAL_RATE*((!digitalRead(ST4_N)?0.5:0.) + (!digitalRead(ST4_S)?-0.5:0.))+move_speed*move_dir_de;
+    float speed_ra=SIDERAL_RATE*(1. + (!digitalRead(ST4_W)?0.5:0.) + (!digitalRead(ST4_E)?-0.5:0.)+move_speed*move_dir_ra);
+    float speed_de=SIDERAL_RATE*((!digitalRead(ST4_N)?0.5:0.) + (!digitalRead(ST4_S)?-0.5:0.)+move_speed*move_dir_de);
 
     upas_ra+=speed_ra*0.001*1024;
     upas_de+=speed_de*0.001*1024;
