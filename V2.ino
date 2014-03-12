@@ -91,7 +91,7 @@ void setup(void){
 
 void loop(void){
     receiveCommand();
-    //processCommand(); 
+    processCommand(); 
 }
 
 
