@@ -37,6 +37,59 @@ char url[] = "http://labs.arduino.cc/adk/ADK_count"; // the URL of your app onli
 // initialize the accessory:
 AndroidAccessory usb(companyName, applicationName,accessoryName,versionNumber,url,serialNumber);
 
+int subcurve(int in){
+    static const int in_val[]={0, 2, 25, 120, 126, 128}; 
+    static const int out_val[]={0, 110, 128, 220, 235, 242};
+//    Serial << in << endl;
+    int pos=(in>=128);
+    if(pos){
+        in=in-128;
+    }else{
+        in=127-in;
+    }
+   
+    int i=0;
+    while(in>in_val[i+1]){
+       i++;
+    }
+    int a=in-in_val[i];
+    int b=in_val[i+1]-in;
+    int result = (out_val[i]*b + out_val[i+1]*a)/(a+b);
+    //Serial << in << " -> " << result << " a: " << a << " b: " << b << " i: " << i << endl;
+    if(pos){
+        return result;
+    }else{
+        return -result;
+    }
+}
+
+int curve(int i){
+  int rem = i & 0xFF;
+  //Serial.println(rem);
+    switch(i & 0x300){
+      case 0:
+        powerCoil(1,242);
+        powerCoil(2,subcurve(rem));        
+        latchTx();
+        break;
+      case 256:
+        powerCoil(2,242);
+        powerCoil(1,subcurve(255-rem));        
+        latchTx();
+        break;
+      case 512:
+        powerCoil(1,-242);
+        powerCoil(2,subcurve(255-rem));
+        latchTx();
+        break;
+       case 768:
+        powerCoil(2,-242);
+        powerCoil(1,subcurve(rem));        
+        latchTx();
+        break;
+    }
+}
+
 
 //Interrupt Service Routine (ISR) for Timer5 overflow at 1kHz
 ISR(TIMER5_COMPA_vect ){ 
@@ -45,25 +98,27 @@ ISR(TIMER5_COMPA_vect ){
     float speed_ra=SIDERAL_RATE*(1. + (!digitalRead(ST4_W)?0.5:0.) + (!digitalRead(ST4_E)?-0.5:0.))+move_speed*move_dir_ra;
     float speed_de=SIDERAL_RATE*((!digitalRead(ST4_N)?0.5:0.) + (!digitalRead(ST4_S)?-0.5:0.))+move_speed*move_dir_de;
     
-    upas_ra+=speed_ra*0.001*256;
-    upas_de+=speed_de*0.001*256;
+    upas_ra+=speed_ra*0.001*1024;
+    upas_de+=speed_de*0.001*1024;
     
-    if(upas_ra>=256.)
-        upas_ra-=256.;
+    if(upas_ra>=1024.)
+        upas_ra-=1024.;
     if(upas_ra<0.)
-        upas_ra+=256.;
-    if(upas_de>=256.)
-        upas_de-=256.;
+        upas_ra+=1024.;
+    if(upas_de>=1024.)
+        upas_de-=1024.;
     if(upas_de<0.)
-        upas_de+=256.;
+        upas_de+=1024.;
     
     unsigned int upas_ra_int = upas_ra;
     unsigned int upas_de_int = upas_de;
     
-    powerCoil(1,UPAS_CURVE[upas_ra_int]);
-    powerCoil(2,UPAS_CURVE[(upas_ra_int+64) & 0xFF]);
-    powerCoil(3,UPAS_CURVE[upas_de_int]);
-    powerCoil(4,UPAS_CURVE[(upas_de_int+64) & 0xFF]);
+//    Serial << upas_ra_int << endl;
+    curve(upas_ra_int);
+//    powerCoil(1,UPAS_CURVE[upas_ra_int]);
+//    powerCoil(2,UPAS_CURVE[(upas_ra_int+64) & 0xFF]);
+//    powerCoil(3,UPAS_CURVE[upas_de_int]);
+//    powerCoil(4,UPAS_CURVE[(upas_de_int+64) & 0xFF]);
 
     latchTx();
 }
@@ -223,7 +278,7 @@ void processCommand()
 void setup(void){
     initInterrupt();
     initMotors();
-    Serial.begin(9600);
+    Serial.begin(115200);
     
     // ST4
     pinMode(ST4_S, INPUT_PULLUP);
@@ -237,8 +292,7 @@ void setup(void){
 
 void loop(void){
   receiveCommand();
-  processCommand(); 
-    
+  //processCommand(); 
 }
 
 
