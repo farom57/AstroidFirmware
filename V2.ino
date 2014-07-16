@@ -19,15 +19,18 @@ char url[] = "http://labs.arduino.cc/adk/ADK_count"; // the URL of your app onli
 AndroidAccessory usb(companyName, applicationName,accessoryName,versionNumber,url,serialNumber);
 
 #define SIDERAL_RATE  86400./86164./4.
+#define TIMEOUT_STATE 200
 
 
 
 long ms_count;
-float upas_ra=0;
-float upas_de=0;
-float move_speed=0.5;
-float move_dir_ra=0;
-float move_dir_de=0;
+long step_ra=0;
+long step_de=0;
+float ustep_ra=0;
+float ustep_de=0;
+float move_speed_ra=0;
+float move_speed_de=0;
+
 
 #define ST4_S 24
 #define ST4_E 26
@@ -44,26 +47,34 @@ float move_dir_de=0;
 ISR(TIMER5_COMPA_vect ){ 
     ms_count++;
 
-    float speed_ra=-SIDERAL_RATE*(1. + (!digitalRead(ST4_W)?0.5:0.) + (!digitalRead(ST4_E)?-0.5:0.)+move_speed*move_dir_ra);
-    float speed_de=SIDERAL_RATE*((!digitalRead(ST4_N)?0.5:0.) + (!digitalRead(ST4_S)?-0.5:0.)+move_speed*move_dir_de);
+    float speed_ra=-SIDERAL_RATE*(1. + (!digitalRead(ST4_W)?0.5:0.) + (!digitalRead(ST4_E)?-0.5:0.)+move_speed_ra);
+    float speed_de=SIDERAL_RATE*((!digitalRead(ST4_N)?0.5:0.) + (!digitalRead(ST4_S)?-0.5:0.)+move_speed_de);
 
-    upas_ra+=speed_ra*0.001*1024;
-    upas_de+=speed_de*0.001*1024;
+    ustep_ra+=speed_ra*0.001*1024;
+    ustep_de+=speed_de*0.001*1024;
 
-    if(upas_ra>=1024.)
-        upas_ra-=1024.;
-    if(upas_ra<0.)
-        upas_ra+=1024.;
-    if(upas_de>=1024.)
-        upas_de-=1024.;
-    if(upas_de<0.)
-        upas_de+=1024.;
+    if(ustep_ra>=1024.){
+        ustep_ra-=1024.;
+        step_ra++;
+    }
+    if(ustep_ra<0.){
+        ustep_ra+=1024.;
+        step_ra--;
+    }
+    if(ustep_de>=1024.){
+        ustep_de-=1024.;
+        step_de++;
+    }
+    if(ustep_de<0.){
+        ustep_de+=1024.;
+        step_de--;
+    }
 
-    unsigned int upas_ra_int = upas_ra;
-    unsigned int upas_de_int = upas_de;
+    unsigned int ustep_ra_int = ustep_ra;
+    unsigned int ustep_de_int = ustep_de;
 
-    setRAStep(upas_ra_int);
-    setDEStep(upas_de_int);
+    setRAStep(ustep_ra_int);
+    setDEStep(ustep_de_int);
 
     latchTx();
 }
@@ -84,14 +95,20 @@ void setup(void){
     // start the connection to the device over the USB host:
     usb.powerOn();
 
-    Serial.begin(115200);
+    Serial.begin(9600);
 
 
 }
 
 void loop(void){
+    static long t_last_state = 0;
+    if(ms_count >= t_last_state + TIMEOUT_STATE){
+        t_last_state = ms_count;
+        sendStatus();
+    }
+    
     receiveCommand();
-    processCommand(); 
+    //processCommand(); 
 }
 
 
