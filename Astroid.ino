@@ -14,7 +14,7 @@ char companyName[] = "Farom";
 // make up anything you want for these
 char versionNumber[] = "1.0";
 char serialNumber[] = "1";
-char url[] = "http://labs.arduino.cc/adk/ADK_count"; // the URL of your app online
+char url[] = "http://www.google.com/"; // the URL of your app online
 // initialize the accessory:
 AndroidAccessory usb(companyName, applicationName,accessoryName,versionNumber,url,serialNumber);
 

@@ -9,8 +9,8 @@
 #define MOTORCLK 4
 #define MOTORENABLE 7
 #define MOTORDATA 8
-#define C1_A 3
-#define C1_B 2
+#define C1_A 2
+#define C1_B 3
 #define C2_A 1
 #define C2_B 4
 #define C4_A 0

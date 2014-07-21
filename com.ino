@@ -59,11 +59,11 @@ void sendStatus(){
 
     Serial.write(buffer, STATUS_MSG_SIZE);
 
-    //    if (usb.isConnected()) {
-    //        usb.beginTransmission();
-    //        usb.write(buffer, STATUS_MSG_SIZE);
-    //        usb.endTransmission();
-    //    }
+//    if (usb.isConnected()) {
+//        usb.beginTransmission();
+//        usb.write(buffer, STATUS_MSG_SIZE);
+//        usb.endTransmission();
+//    }
 }
 
 
@@ -110,18 +110,21 @@ void receiveCommand()
     }
 
 
-    //    if (usb.isConnected() && !waiting_command) { // isConnected makes sure the USB connection is ope
-    //        char buff[5];
-    //        int len = usb.read(buff, 16,5);
-    //        if(len!=-1){
-    //            buff[len]=0;
-    //            str_command=String(buff);
-    //            //Serial.println(buff);
-    //            waiting_command = true;
-    //            receiving_command = false;
-    //        }
-    //
-    //    }
+//    if (usb.isConnected()) { // isConnected makes sure the USB connection is open
+//        char buff[16];
+////        int len = usb.read(buff, 16,5);
+//        Serial.println("connected");
+//        int len = usb.read(buff, 1,5);
+//        if(len!=-1){
+//            buff[len]=0;
+//            str_command=String(buff);
+//            Serial.println("received:");
+//            Serial.println(buff);
+//            waiting_command = true;
+//            receiving_command = false;
+//        }
+//
+//    }
 
 
 }
