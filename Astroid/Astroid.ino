@@ -1,22 +1,20 @@
+#include <adk.h>
+#include <usbhub.h>
 #include "com.h"
 #include "motor.h"
 #include <Streaming.h>
-#include <Max3421e.h>
-#include <Usb.h>
-#include <AndroidAccessory.h>
+
 
 // USB
-// accessory descriptor. It's how Arduino identifies itself to Android
-char applicationName[] = "Mega_ADK"; // the app on your phone
-char accessoryName[] = "Mega_ADK"; // your Arduino board
-char companyName[] = "Farom";
-
-// make up anything you want for these
-char versionNumber[] = "1.0";
-char serialNumber[] = "1";
-char url[] = "http://www.google.com/"; // the URL of your app online
-// initialize the accessory:
-AndroidAccessory usb(companyName, applicationName,accessoryName,versionNumber,url,serialNumber);
+USB Usb;
+USBHub hub0(&Usb);
+USBHub hub1(&Usb);
+ADK adk(&Usb,"Farom",
+            "Mega_ADK",
+            "Mega_ADK",
+            "1.0",
+            "http://www.android.com",
+            "0000000012345678");
 
 #define SIDERAL_RATE  86400./86164./4.
 #define TIMEOUT_STATE 200
@@ -92,10 +90,15 @@ void setup(void){
     pinMode(ST4_W, INPUT_PULLUP);
     pinMode(ST4_E, INPUT_PULLUP);
     
-    // start the connection to the device over the USB host:
-    usb.powerOn();
-
+    // Serial
     Serial.begin(9600);
+    
+    // USB
+    if (Usb.Init() == -1) {
+      Serial.println("OSCOKIRQ failed to assert");
+    }
+
+    
 
 
 }

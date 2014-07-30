@@ -11,10 +11,7 @@ String str_command = "";
 byte receiving_command = false;
 
 void receiveCommand();
-//void processCommand_M();
-//void processCommand_Q();
-//void processCommand_R();
-//void processCommand();
+void processCommand(byte* buffer);
 void sendStatus();
 float toFloat(byte* ptr);
 
