@@ -119,7 +119,7 @@ void powerCoil(byte coil_num, int power)
         latch_state |= _BV(b);
     }
 
-    //latchTx();
+
 
 }
 
@@ -201,22 +201,18 @@ void setRAStep(int i){
     case 0:
         powerCoil(1,242);
         powerCoil(2,powerCurve(rem));        
-        latchTx();
         break;
     case 256:
         powerCoil(2,242);
         powerCoil(1,powerCurve(255-rem));        
-        latchTx();
         break;
     case 512:
         powerCoil(1,-242);
         powerCoil(2,powerCurve(255-rem));
-        latchTx();
         break;
     case 768:
         powerCoil(2,-242);
-        powerCoil(1,powerCurve(rem));        
-        latchTx();
+        powerCoil(1,powerCurve(rem));
         break;
     }
 }
@@ -228,23 +224,19 @@ void setDEStep(int i){
     switch(i & 0x300){
     case 0:
         powerCoil(3,242);
-        powerCoil(4,powerCurve(rem));        
-        latchTx();
+        powerCoil(4,powerCurve(rem));
         break;
     case 256:
         powerCoil(4,242);
-        powerCoil(3,powerCurve(255-rem));        
-        latchTx();
+        powerCoil(3,powerCurve(255-rem));
         break;
     case 512:
         powerCoil(3,-242);
         powerCoil(4,powerCurve(255-rem));
-        latchTx();
         break;
     case 768:
         powerCoil(4,-242);
-        powerCoil(3,powerCurve(rem));        
-        latchTx();
+        powerCoil(3,powerCurve(rem));
         break;
     }
 }
