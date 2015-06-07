@@ -1,7 +1,7 @@
 #include "com.h"
 
-#define STATUS_MSG_SIZE 29
-#define CMD_MSG_SIZE 9
+#define STATUS_MSG_SIZE 31
+#define CMD_MSG_SIZE 11
 #define RX_TIMEOUT 1000
 
 void sendStatus() {
@@ -14,7 +14,8 @@ void sendStatus() {
    * 16-19: ustep_de (float)
    * 20-23: move_speed_ra (float)
    * 24-27: move_speed_de (float)
-   * 28: checksum
+   * 28-29: ticks_servo (unsigned int)
+   * 30: checksum
    */
 
   int i = 0;
@@ -53,6 +54,9 @@ void sendStatus() {
   buffer[i++] = (byte)((*(long*)&move_speed_de) >> 16);
   buffer[i++] = (byte)((*(long*)&move_speed_de) >> 8);
   buffer[i++] = (byte)((*(long*)&move_speed_de));
+  
+  buffer[i++] = (byte)(ticks_servo >> 8);
+  buffer[i++] = (byte)(ticks_servo);
 
   //checksum
   buffer[STATUS_MSG_SIZE - 1] = 0;
@@ -81,15 +85,22 @@ float toFloat(byte* ptr) {
 }
 
 void processCommand(byte* buffer){
-    byte sum = 0;
-    for (int i = 0; i < CMD_MSG_SIZE - 1; i++) {
-      sum += buffer[i];
-    }
+  /* buffer bytes (big-endian):
+   * 0-3: move_speed_ra (float)
+   * 4-7: move_speed_de (float)
+   * 8-9: ticks_servo (unsigned int)
+   * 10: checksum
+   */
+  byte sum = 0;
+  for (int i = 0; i < CMD_MSG_SIZE - 1; i++) {
+    sum += buffer[i];
+  }
 
-    if (sum == buffer[CMD_MSG_SIZE - 1]) {
-      move_speed_ra = toFloat(buffer);
-      move_speed_de = toFloat(buffer + 4);
-    }
+  if (sum == buffer[CMD_MSG_SIZE - 1]) {
+    move_speed_ra = toFloat(buffer);
+    move_speed_de = toFloat(buffer + 4);
+    ticks_servo = buffer[8]<<8 + buffer[9];
+  }
 }
 
 void receiveCommand()

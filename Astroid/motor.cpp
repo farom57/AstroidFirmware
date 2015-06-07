@@ -153,7 +153,7 @@ void initInterrupt(void)
      *       = 1999
      *
      */
-    OCR5A = 1999;
+    OCR5A = 16000000L/(UPDATE_FREQ*8) - 1;
 
     //Enable compare match A
     bitClear(TCCR5A,COM5A1);

@@ -21,7 +21,8 @@ ADK adk(&Usb,"Farom",
 
 
 
-long ms_count;
+long ms_count=0;
+
 long step_ra=0;
 long step_de=0;
 float ustep_ra=0;
@@ -29,27 +30,31 @@ float ustep_de=0;
 float move_speed_ra=0;
 float move_speed_de=0;
 
+unsigned int ticks_servo = 1500;
+
 
 #define ST4_S 24
 #define ST4_E 26
 #define ST4_W 28
 #define ST4_N 30
 
-
-
-
+#define PIN_SERVO 10
 
 
 
 //Interrupt Service Routine (ISR) for Timer5 overflow at 1kHz
 ISR(TIMER5_COMPA_vect ){ 
-    ms_count++;
+    ms_count += UPDATE_TIME_MS;
+    
+    if(ms_count % 20 < UPDATE_TIME_MS){
+      digitalWrite(PIN_SERVO,HIGH);
+    }
 
     float speed_ra=-SIDERAL_RATE*(1. + (!digitalRead(ST4_W)?0.5:0.) + (!digitalRead(ST4_E)?-0.5:0.)+move_speed_ra);
     float speed_de=SIDERAL_RATE*((!digitalRead(ST4_N)?0.5:0.) + (!digitalRead(ST4_S)?-0.5:0.)+move_speed_de);
 
-    ustep_ra+=speed_ra*0.001*1024;
-    ustep_de+=speed_de*0.001*1024;
+    ustep_ra+=speed_ra*UPDATE_TIME*1024;
+    ustep_de+=speed_de*UPDATE_TIME*1024;
 
     if(ustep_ra>=1024.){
         ustep_ra-=1024.;
@@ -75,6 +80,14 @@ ISR(TIMER5_COMPA_vect ){
     setDEStep(ustep_de_int);
 
     latchTx();
+    
+    if(ms_count % 20 <= UPDATE_TIME_MS){
+      unsigned int temp = TCNT5;
+      while(ticks_servo > temp){
+        temp = TCNT5;
+      }
+      digitalWrite(PIN_SERVO,LOW);
+    }
 }
 
 
@@ -98,7 +111,7 @@ void setup(void){
       Serial.println("OSCOKIRQ failed to assert");
     }
 
-    
+    pinMode(PIN_SERVO, OUTPUT);    
 
 
 }
@@ -111,7 +124,8 @@ void loop(void){
     }
     
     receiveCommand();
-    //processCommand(); 
+    //processCommand();
+
 }
 
 

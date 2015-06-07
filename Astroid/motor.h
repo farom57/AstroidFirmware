@@ -42,9 +42,9 @@ const int CURVE_IN[]={
 const int CURVE_OUT[]={   
     0, 110, 128, 220, 235, 242};
 
-// Branchement des moteurs
-#define RA_NO 1 
-#define DE_NO 2
+#define UPDATE_FREQ 500
+#define UPDATE_TIME 0.002
+#define UPDATE_TIME_MS 2
 
 
 static uint8_t latch_state;
