@@ -99,7 +99,7 @@ void processCommand(byte* buffer){
   if (sum == buffer[CMD_MSG_SIZE - 1]) {
     move_speed_ra = toFloat(buffer);
     move_speed_de = toFloat(buffer + 4);
-    ticks_servo = buffer[8]<<8 + buffer[9];
+    ticks_servo = (buffer[8]<<8) + buffer[9];
   }
 }
 
