@@ -30,7 +30,7 @@ float ustep_de=0;
 float move_speed_ra=0;
 float move_speed_de=0;
 
-unsigned int ticks_servo = 1500;
+unsigned int ticks_servo = 4500;
 
 
 #define ST4_S 24
@@ -38,7 +38,8 @@ unsigned int ticks_servo = 1500;
 #define ST4_W 28
 #define ST4_N 30
 
-#define PIN_SERVO 10
+#define PIN_SERVO A3
+#define PIN_ENABLE_SERVO A5
 
 
 
@@ -111,7 +112,9 @@ void setup(void){
       Serial.println("OSCOKIRQ failed to assert");
     }
 
-    pinMode(PIN_SERVO, OUTPUT);    
+    pinMode(PIN_SERVO, OUTPUT);
+    pinMode(PIN_ENABLE_SERVO, OUTPUT);
+    digitalWrite(PIN_ENABLE_SERVO,HIGH);
 
 
 }
