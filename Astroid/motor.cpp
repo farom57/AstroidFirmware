@@ -193,6 +193,12 @@ int powerCurve(int in){
     }
 }
 
+// stop powering the RA motor
+void stopRA(){
+  powerCoil(1,0);
+  powerCoil(2,0);
+}
+
 // Move the RA motor to the given micro-step
 void setRAStep(int i){
     int rem = i & 0xFF;
@@ -215,6 +221,12 @@ void setRAStep(int i){
         powerCoil(1,powerCurve(rem));
         break;
     }
+}
+
+// stop powering the DE motor
+void stopDE(){
+  powerCoil(3,0);
+  powerCoil(4,0);
 }
 
 // Move the RA motor to the given micro-step

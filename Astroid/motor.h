@@ -52,6 +52,8 @@ void powerCoil(byte coil_num, int power);
 void latchTx(void);
 void initMotors(void);
 void initInterrupt(void);
+void stopDE();
+void stopRA();
 void setRAStep(int i);
 void setDEStep(int i);
 int powerCurve(int i);

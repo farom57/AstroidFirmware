@@ -100,11 +100,7 @@ void processCommand(byte* buffer){
     move_speed_ra = toFloat(buffer);
     move_speed_de = toFloat(buffer + 4);
     ticks_servo = (buffer[8]<<8) + buffer[9];
-    if(ticks_servo > 4000){
-      digitalWrite(PIN_ENABLE_SERVO,HIGH);
-    }else{
-      digitalWrite(PIN_ENABLE_SERVO,LOW);
-    }
+    processServoExpose();
   }
 }
 
