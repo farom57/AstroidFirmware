@@ -53,9 +53,9 @@ void latchTx(void);
 void initMotors(void);
 void initInterrupt(void);
 void stopDE();
-void stopRA();
-void setRAStep(int i);
-void setDEStep(int i);
+void stopHA();
+void setHAStep(int i, float power_modul);
+void setDEStep(int i, float power_modul);
 int powerCurve(int i);
 
 

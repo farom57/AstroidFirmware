@@ -73,7 +73,8 @@ void initMotors()
 void powerCoil(byte coil_num, int power)
 {
     byte a, b;
-
+    power=max(power,-255);
+    power=min(power,255);
     switch (coil_num) {
     case 1:
         a = C1_A;
@@ -193,32 +194,32 @@ int powerCurve(int in){
     }
 }
 
-// stop powering the RA motor
-void stopRA(){
+// stop powering the HA motor
+void stopHA(){
   powerCoil(1,0);
   powerCoil(2,0);
 }
 
-// Move the RA motor to the given micro-step
-void setRAStep(int i){
+// Move the HA motor to the given micro-step
+void setHAStep(int i, float power_modul){
     int rem = i & 0xFF;
 
     switch(i & 0x300){
     case 0:
-        powerCoil(1,242);
-        powerCoil(2,powerCurve(rem));        
+        powerCoil(1,242*power_modul);
+        powerCoil(2,powerCurve(rem)*abs(power_modul));        
         break;
     case 256:
-        powerCoil(2,242);
-        powerCoil(1,powerCurve(255-rem));        
+        powerCoil(1,powerCurve(255-rem)*power_modul);
+        powerCoil(2,242*abs(power_modul));
         break;
     case 512:
-        powerCoil(1,-242);
-        powerCoil(2,powerCurve(255-rem));
+        powerCoil(1,-242*power_modul);
+        powerCoil(2,powerCurve(255-rem)*abs(power_modul));
         break;
     case 768:
-        powerCoil(2,-242);
-        powerCoil(1,powerCurve(rem));
+        powerCoil(1,powerCurve(rem)*power_modul);
+        powerCoil(2,-242*abs(power_modul));
         break;
     }
 }
@@ -229,26 +230,26 @@ void stopDE(){
   powerCoil(4,0);
 }
 
-// Move the RA motor to the given micro-step
-void setDEStep(int i){
+// Move the HA motor to the given micro-step
+void setDEStep(int i, float power_modul){
     int rem = i & 0xFF;
 
     switch(i & 0x300){
     case 0:
-        powerCoil(3,242);
-        powerCoil(4,powerCurve(rem));
+        powerCoil(3,242*power_modul);
+        powerCoil(4,powerCurve(rem)*abs(power_modul));        
         break;
     case 256:
-        powerCoil(4,242);
-        powerCoil(3,powerCurve(255-rem));
+        powerCoil(3,powerCurve(255-rem)*power_modul);
+        powerCoil(4,242*abs(power_modul));
         break;
     case 512:
-        powerCoil(3,-242);
-        powerCoil(4,powerCurve(255-rem));
+        powerCoil(3,-242*power_modul);
+        powerCoil(4,powerCurve(255-rem)*abs(power_modul));
         break;
     case 768:
-        powerCoil(4,-242);
-        powerCoil(3,powerCurve(rem));
+        powerCoil(3,powerCurve(rem)*power_modul);
+        powerCoil(4,-242*abs(power_modul));
         break;
     }
 }

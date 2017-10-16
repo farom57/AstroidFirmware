@@ -23,12 +23,14 @@ ADK adk(&Usb,"Farom",
 
 long ms_count=0;
 
-long step_ra=0;
+long step_ha=0;
 long step_de=0;
-float ustep_ra=0;
+float ustep_ha=0;
 float ustep_de=0;
-float move_speed_ra=0;
+float move_speed_ha=1.;
 float move_speed_de=0;
+float power_ha=1.;
+float power_de=1.;
 
 unsigned int ticks_servo = 0;
 
@@ -55,19 +57,19 @@ ISR(TIMER5_COMPA_vect ){
       }
     }
 
-    float speed_ra=-SIDERAL_RATE*(1. + (!digitalRead(ST4_W)?0.5:0.) + (!digitalRead(ST4_E)?-0.5:0.)+move_speed_ra);
+    float speed_ha=SIDERAL_RATE*((!digitalRead(ST4_W)?0.5:0.) + (!digitalRead(ST4_E)?-0.5:0.)+move_speed_ha);
     float speed_de=SIDERAL_RATE*((!digitalRead(ST4_N)?0.5:0.) + (!digitalRead(ST4_S)?-0.5:0.)+move_speed_de);
 
-    ustep_ra+=speed_ra*UPDATE_TIME*1024;
+    ustep_ha+=speed_ha*UPDATE_TIME*1024;
     ustep_de+=speed_de*UPDATE_TIME*1024;
 
-    if(ustep_ra>=1024.){
-        ustep_ra-=1024.;
-        step_ra++;
+    if(ustep_ha>=1024.){
+        ustep_ha-=1024.;
+        step_ha++;
     }
-    if(ustep_ra<0.){
-        ustep_ra+=1024.;
-        step_ra--;
+    if(ustep_ha<0.){
+        ustep_ha+=1024.;
+        step_ha--;
     }
     if(ustep_de>=1024.){
         ustep_de-=1024.;
@@ -78,20 +80,14 @@ ISR(TIMER5_COMPA_vect ){
         step_de--;
     }
 
-    unsigned int ustep_ra_int = ustep_ra;
+    unsigned int ustep_ha_int = ustep_ha;
     unsigned int ustep_de_int = ustep_de;
 
 
-    if(speed_ra==0.){
-      stopRA();
-    }else{
-      setRAStep(ustep_ra_int);
-    }
-    if(speed_de==0.){
-      stopDE();
-    }else{
-      setDEStep(ustep_de_int);
-    }
+
+      setHAStep(ustep_ha_int, power_ha);
+      setDEStep(ustep_de_int, power_de);
+
     
     latchTx();
     
