@@ -2,7 +2,6 @@
 #define COM_H
 
 #include "Arduino.h"
-#include <Streaming.h>
 
 
 //uart & command variables
@@ -19,3 +18,4 @@ float toFloat(byte* ptr);
 
 
 #endif
+
