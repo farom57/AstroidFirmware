@@ -185,27 +185,7 @@ void processCommand(byte* buffer){
     power_aux3 = (buffer[20]<<8) + buffer[21];
     bulb_state = buffer[22];
 
-    ustep_speed_ha=move_speed_ha*SIDERAL_RATE*UPDATE_TIME*64.;
-    ustep_speed_de=move_speed_de*SIDERAL_RATE*UPDATE_TIME*64.;
-    ustep_speed_focus=move_speed_focus*UPDATE_TIME*64.;
-
-    if(power_ha==0. || (move_speed_ha==0. && abs(power_ha)<0.5)){
-      digitalWrite(HA_ENABLE_PIN, HIGH); // it's a !ENABLE pin
-    }
-    else{
-      digitalWrite(HA_ENABLE_PIN, LOW); // it's a !ENABLE pin
-    }
-
-    if((power_de==0. || (move_speed_de==0. && abs(power_de)<0.5)) && (power_focus==0. || move_speed_focus==0.)){
-      digitalWrite(DE_ENABLE_PIN, HIGH); // it's a !ENABLE pin
-    }
-    else{
-      digitalWrite(DE_ENABLE_PIN, LOW); // it's a !ENABLE pin
-    }
-
-    analogWrite(AUX1_PIN,power_aux1);
-    analogWrite(AUX2_PIN,power_aux2);
-    analogWrite(AUX3_PIN,power_aux3);
+    updateOutputCtrl();
   }
 }
 
