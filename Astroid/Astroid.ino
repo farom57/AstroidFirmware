@@ -85,6 +85,8 @@
 #define SPEED_3 32.0
 #define SPEED_4 256.0
 
+#define DEC_SLEEP_TIMEOUT 60L*UPDATE_FREQ
+
 long clock=0;
 
 float ustep_speed_ha=SIDERAL_RATE*UPDATE_TIME*64.;
@@ -100,7 +102,7 @@ float joystick_speed_de=0.;
 float joystick_speed=SPEED_3;
 float move_speed_focus=0;
 float power_ha=1.;
-float power_de=0.1;
+float power_de=1;
 float power_focus=0.;
 float ha_ustep_fraction=0;
 float de_ustep_fraction=0;
@@ -112,6 +114,7 @@ byte bulb_state=0;
 int counter_aux1=0;
 int counter_aux2=0;
 int counter_aux3=0;
+long last_dec_active=0;
 
 void updateOutputCtrl();
 void delayms(int ms);
@@ -544,11 +547,13 @@ void updateOutputCtrl(){
     digitalWrite(HA_ENABLE_PIN, LOW); // it's a !ENABLE pin
   }
 
-  if((power_de==0. || (move_speed_de+joystick_speed_de==0. && abs(power_de)<0.5)) && (power_focus==0. || move_speed_focus==0.)){
-    digitalWrite(DE_ENABLE_PIN, HIGH); // it's a !ENABLE pin
-  }
-  else{
+  if(move_speed_de!=0. ||  joystick_speed_de!=0. || move_speed_focus==0.||abs(power_de)>1){
     digitalWrite(DE_ENABLE_PIN, LOW); // it's a !ENABLE pin
+    last_dec_active = clock;
+  }else if (clock-last_dec_active<DEC_SLEEP_TIMEOUT){
+    digitalWrite(DE_ENABLE_PIN, LOW); // it's a !ENABLE pin
+  }else{
+    digitalWrite(DE_ENABLE_PIN, HIGH); // it's a !ENABLE pin
   }
 
   analogWrite(AUX1_PIN,power_aux1);
