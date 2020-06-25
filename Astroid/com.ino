@@ -7,25 +7,25 @@
 void sendStatus() {
   byte buffer[STATUS_MSG_SIZE];
   /* Preamble: 0x55
-   * buffer bytes (big-endian):
-   * 0-3: ms_count (long)
-   * 4-7; step_ha (long)
-   * 8-11: step_de (long)
-   * 12-15: ustep_ha (float)
-   * 16-19: ustep_de (float)
-   * 20-23: move_speed_ha (float)
-   * 24-27: move_speed_de (float)
-   * 28-31: power_ha (float)
-   * 32-35: power_de (float)
-   * 36-37: power_aux1 (uint)
-   * 38-39: power_aux2 (uint)
-   * 40-41: power_aux3 (uint)
-   * 42: bulb_state (byte)
-   * 43-46: step_focus (long)
-   * 47-50: ustep_focus (float)
-   * 51-54: move_speed_focus (float)
-   * 55: checksum
-   */
+     buffer bytes (big-endian):
+     0-3: ms_count (long)
+     4-7; step_ha (long)
+     8-11: step_de (long)
+     12-15: ustep_ha (float)
+     16-19: ustep_de (float)
+     20-23: move_speed_ha (float)
+     24-27: move_speed_de (float)
+     28-31: power_ha (float)
+     32-35: power_de (float)
+     36-37: power_aux1 (uint)
+     38-39: power_aux2 (uint)
+     40-41: power_aux3 (uint)
+     42: bulb_state (byte)
+     43-46: step_focus (long)
+     47-50: ustep_focus (float)
+     51-54: move_speed_focus (float)
+     55: checksum
+  */
 
   int i = 0;
   long ms_count = UPDATE_TIME_MS * clock;
@@ -138,7 +138,6 @@ void sendStatus() {
 
 
 
-
 }
 
 
@@ -152,20 +151,20 @@ float toFloat(byte* ptr) {
   return result;
 }
 
-void processCommand(byte* buffer){
+void processCommand(byte* buffer) {
   /* buffer bytes (big-endian):
-   * 0-3: move_speed_ha (float)
-   * 4-7: move_speed_de (float)
-   * 8-11: power_ha
-   * 12-15: power_de
-   * 16-17: power_aux1 (uint)
-   * 18-19: power_aux2 (uint)
-   * 20-21: power_aux3 (uint)
-   * 22: bulb_state (byte)
-   * 23-26: move_speed_focus (float)
-   * 27-30: power_focus
-   * 31: checksum
-   */
+     0-3: move_speed_ha (float)
+     4-7: move_speed_de (float)
+     8-11: power_ha
+     12-15: power_de
+     16-17: power_aux1 (uint)
+     18-19: power_aux2 (uint)
+     20-21: power_aux3 (uint)
+     22: bulb_state (byte)
+     23-26: move_speed_focus (float)
+     27-30: power_focus
+     31: checksum
+  */
   byte sum = 0;
   for (int i = 0; i < CMD_MSG_SIZE - 1; i++) {
     sum += buffer[i];
@@ -180,9 +179,9 @@ void processCommand(byte* buffer){
     power_de = toFloat(buffer + 12);
     power_focus = toFloat(buffer + 27);
 
-    power_aux1 = (buffer[16]<<8) + buffer[17];
-    power_aux2 = (buffer[18]<<8) + buffer[19];
-    power_aux3 = (buffer[20]<<8) + buffer[21];
+    power_aux1 = (buffer[16] << 8) + buffer[17];
+    power_aux2 = (buffer[18] << 8) + buffer[19];
+    power_aux3 = (buffer[20] << 8) + buffer[21];
     bulb_state = buffer[22];
 
     updateOutputCtrl();
@@ -209,7 +208,7 @@ void receiveCommand()
   }
 
   if (pos == CMD_MSG_SIZE) {
-    processCommand(buffer);    
+    processCommand(buffer);
     pos = 0;
   }
 
@@ -221,16 +220,3 @@ void receiveCommand()
 
 
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
