@@ -21,8 +21,8 @@
 #define FAN_PIN            4
 #define HEATER_END_PIN     13
 #define HEATER_BED_PIN     12
-#define TEMP_0_PIN          7   // Analogue pin
-#define TEMP_BED_PIN        6   // Analogue pin
+#define TEMP_0_PIN          A7   // Analogue pin
+#define TEMP_BED_PIN        A6   // Analogue pin
 #define X_MIN_PIN          18
 #define Y_MIN_PIN          19
 #define Z_MIN_PIN          20
@@ -36,19 +36,19 @@
 
 
 //Choose which motor correspond to DE and HA
-#define HA_STEP_PIN    Z_STEP_PIN
-#define HA_DIR_PIN     Z_DIR_PIN
-#define HA_ENABLE_PIN  Z_ENABLE_PIN
-#define DE_STEP_PIN    Y_STEP_PIN
-#define DE_DIR_PIN     Y_DIR_PIN
-#define DE_ENABLE_PIN  XYE0_ENABLE_PIN
+#define HA_STEP_PIN    Y_STEP_PIN
+#define HA_DIR_PIN     Y_DIR_PIN
+#define HA_ENABLE_PIN  XYE0_ENABLE_PIN
+#define DE_STEP_PIN    Z_STEP_PIN
+#define DE_DIR_PIN     Z_DIR_PIN
+#define DE_ENABLE_PIN  Z_ENABLE_PIN
 #define FOCUS_STEP_PIN E0_STEP_PIN
 #define FOCUS_DIR_PIN  E0_DIR_PIN
 #define AUX1_PIN       HEATER_BED_PIN
 #define AUX2_PIN       HEATER_END_PIN
 #define AUX3_PIN       FAN_PIN
-#define BULB_PIN1      TEMP_BED_PIN
-#define BULB_PIN2      TEMP_0_PIN
+#define BULB_PIN      TEMP_BED_PIN
+#define REMOTE_PIN      TEMP_0_PIN
 #define BUZZER_PIN     Y_MIN_PIN
 
 /* Go to sheet/remote astroid
@@ -219,15 +219,15 @@ void initAux()
   pinMode(AUX1_PIN, OUTPUT);
   pinMode(AUX2_PIN, OUTPUT);
   pinMode(AUX3_PIN, OUTPUT);
-  pinMode(BULB_PIN1, INPUT);
-  pinMode(BULB_PIN2, INPUT);
+  pinMode(BULB_PIN, INPUT);
+  pinMode(REMOTE_PIN, INPUT);
   pinMode(BUZZER_PIN, OUTPUT);
 
   digitalWrite(AUX1_PIN, LOW);
   digitalWrite(AUX2_PIN, LOW);
   digitalWrite(AUX3_PIN, LOW);
-  digitalWrite(BULB_PIN1, LOW);
-  digitalWrite(BULB_PIN2, LOW);
+  digitalWrite(BULB_PIN, LOW);
+  digitalWrite(REMOTE_PIN, LOW);
   digitalWrite(BUZZER_PIN, LOW);
 
   bitClear(TCCR0B, CS02);
@@ -347,10 +347,8 @@ void changeSpeed() {
 
 void loop(void) {
   static long clock_state = 0;
-  static byte button1_value = UNCONNECTED;
-  static byte button2_value = UNCONNECTED;
-  static long button1_chg_time = 0;
-  static long button2_chg_time = 0;
+  static byte button_value = UNCONNECTED;
+  static long button_chg_time = 0;
   static byte speed_change_done;
   int meas;
 
@@ -369,167 +367,86 @@ void loop(void) {
 
   if (bulb_state)
   {
-    pinMode(A6, OUTPUT);
-    pinMode(A7, OUTPUT);
-    digitalWrite(BULB_PIN1, LOW);
-    digitalWrite(BULB_PIN2, LOW);
-    //digitalWrite(BUZZER_PIN, HIGH);
-    joystick_speed_ha = 0;
-    joystick_speed_de = 0;
-    button1_value = UNCONNECTED;
-    button2_value = UNCONNECTED;
-    updateOutputCtrl();
+    pinMode(BULB_PIN, OUTPUT);
+    digitalWrite(BULB_PIN, LOW);
+  } else {
+    pinMode(BULB_PIN, INPUT);
+  }
+
+
+
+  
+
+  //digitalWrite(BUZZER_PIN, LOW);
+  joystick_speed_ha = 0;
+  joystick_speed_de = 0;
+
+  // --- Process 1st joystick port ---
+  meas = analogRead(REMOTE_PIN);
+
+
+  // down button pressed
+  if (meas < (DOWN_V + RIGHT_V) * 102) { //*102 = /2 *1024 /5.0V
+    if (button_value != DOWN)
+      button_chg_time = clock;
+    button_value = DOWN;
+    if (clock - button_chg_time > BTN_DELAY * UPDATE_FREQ) {
+      joystick_speed_de = -joystick_speed;
+    }
+
+    // right button pressed
+  }
+  else if (meas < (RIGHT_V + UP_V) * 102) {
+    if (button_value != RIGHT)
+      button_chg_time = clock;
+    button_value = RIGHT;
+    if (clock - button_chg_time > BTN_DELAY * UPDATE_FREQ) {
+      joystick_speed_ha = joystick_speed;
+    }
+
+    // up button pressed
+  }
+  else if (meas < (UP_V + LEFT_V) * 102) {
+    if (button_value != UP)
+      button_chg_time = clock;
+    button_value = UP;
+    if (clock - button_chg_time > BTN_DELAY * UPDATE_FREQ) {
+      joystick_speed_de = joystick_speed;
+    }
+
+    // left button pressed
+  }
+  else if (meas < (LEFT_V + ENTER_V) * 102) {
+    if (button_value != LEFT)
+      button_chg_time = clock;
+    button_value = LEFT;
+    if (clock - button_chg_time > BTN_DELAY * UPDATE_FREQ) {
+      joystick_speed_ha = -joystick_speed;
+    }
+
+    // enter button pressed
+  }
+  else if (meas < (ENTER_V + UNCONNECTED_V) * 102) {
+    if (button_value != ENTER) {
+      speed_change_done = 0;
+      button_chg_time = clock;
+    }
+
+    button_value = ENTER;
+    if (clock - button_chg_time > BTN_DELAY * UPDATE_FREQ) {
+      if (speed_change_done == 0) {
+        changeSpeed();
+        speed_change_done = 1;
+      }
+    }
+
+    // joystick not connected or no button pressed or camera connected
   }
   else {
-    pinMode(A6, INPUT);
-    pinMode(A7, INPUT);
-    //digitalWrite(BUZZER_PIN, LOW);
-    joystick_speed_ha = 0;
-    joystick_speed_de = 0;
-
-    // --- Process 1st joystick port ---
-    meas = analogRead(BULB_PIN1);
-
-
-    // down button pressed
-    if (meas < (DOWN_V + RIGHT_V) * 102) { //*102 = /2 *1024 /5.0V
-      if (button1_value != DOWN)
-        button1_chg_time = clock;
-      button1_value = DOWN;
-      if (clock - button1_chg_time > BTN_DELAY * UPDATE_FREQ) {
-        joystick_speed_de = -joystick_speed;
-      }
-
-      // right button pressed
-    }
-    else if (meas < (RIGHT_V + UP_V) * 102) {
-      if (button1_value != RIGHT)
-        button1_chg_time = clock;
-      button1_value = RIGHT;
-      if (clock - button1_chg_time > BTN_DELAY * UPDATE_FREQ) {
-        joystick_speed_ha = joystick_speed;
-      }
-
-      // up button pressed
-    }
-    else if (meas < (UP_V + LEFT_V) * 102) {
-      if (button1_value != UP)
-        button1_chg_time = clock;
-      button1_value = UP;
-      if (clock - button1_chg_time > BTN_DELAY * UPDATE_FREQ) {
-        joystick_speed_de = joystick_speed;
-      }
-
-      // left button pressed
-    }
-    else if (meas < (LEFT_V + ENTER_V) * 102) {
-      if (button1_value != LEFT)
-        button1_chg_time = clock;
-      button1_value = LEFT;
-      if (clock - button1_chg_time > BTN_DELAY * UPDATE_FREQ) {
-        joystick_speed_ha = -joystick_speed;
-      }
-
-      // enter button pressed
-    }
-    else if (meas < (ENTER_V + UNCONNECTED_V) * 102) {
-      if (button1_value != ENTER) {
-        speed_change_done = 0;
-        button1_chg_time = clock;
-      }
-
-      button1_value = ENTER;
-      if (clock - button1_chg_time > BTN_DELAY * UPDATE_FREQ) {
-        if (speed_change_done == 0) {
-          changeSpeed();
-          speed_change_done = 1;
-        }
-      }
-
-      // joystick not connected or no button pressed or camera connected
-    }
-    else {
-      button1_value = UNCONNECTED;
-    }
-
-
-    /// --- Process 2nd joystick port ---
-    meas = analogRead(BULB_PIN2);
-    //Serial.print("PIN2:");
-    //Serial.println(meas);
-
-    // down button pressed
-    if (meas < (DOWN_V + RIGHT_V) * 102) {
-      if (button2_value != DOWN)
-        button2_chg_time = clock;
-      button2_value = DOWN;
-      if (clock - button2_chg_time > BTN_DELAY * UPDATE_FREQ) {
-        joystick_speed_de = -joystick_speed;
-      }
-
-      // right button pressed
-    }
-    else if (meas < (RIGHT_V + UP_V) * 102) {
-      if (button2_value != RIGHT)
-        button2_chg_time = clock;
-      button2_value = RIGHT;
-      if (clock - button2_chg_time > BTN_DELAY * UPDATE_FREQ) {
-        joystick_speed_ha = joystick_speed;
-      }
-
-      // up button pressed
-    }
-    else if (meas < (UP_V + LEFT_V) * 102) {
-      if (button2_value != UP)
-        button2_chg_time = clock;
-      button2_value = UP;
-      if (clock - button2_chg_time > BTN_DELAY * UPDATE_FREQ) {
-        joystick_speed_de = joystick_speed;
-      }
-
-      // left button pressed
-    }
-    else if (meas < (LEFT_V + ENTER_V) * 102) {
-      if (button2_value != LEFT)
-        button2_chg_time = clock;
-      button2_value = LEFT;
-      if (clock - button2_chg_time > BTN_DELAY * UPDATE_FREQ) {
-        joystick_speed_ha = -joystick_speed;
-      }
-
-      // enter button pressed
-    }
-    else if (meas < (ENTER_V + UNCONNECTED_V) * 102) {
-      if (button2_value != ENTER) {
-        speed_change_done = 0;
-        button2_chg_time = clock;
-      }
-      button2_value = ENTER;
-      if (clock - button2_chg_time > UPDATE_FREQ) {
-        if (speed_change_done == 0) {
-          changeSpeed();
-          speed_change_done = 1;
-        }
-      }
-
-      // joystick not connected or no button pressed or camera connected
-    }
-    else {
-      button2_value = UNCONNECTED;
-    }
-
-    updateOutputCtrl();
-    /*
-      if(joystick_speed_ha!=0. || joystick_speed_de!=0.){
-      digitalWrite(BUZZER_PIN, HIGH);
-      }
-      else{
-      digitalWrite(BUZZER_PIN, LOW);
-      }
-    */
-
+    button_value = UNCONNECTED;
   }
 
+  updateOutputCtrl();
 
 
 }
