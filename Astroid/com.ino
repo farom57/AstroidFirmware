@@ -27,8 +27,33 @@ void sendStatus() {
      55: checksum
   */
 
+  long _clock;
+  float _ustep_speed_ha;
+  float _ustep_speed_de;
+  float _ustep_speed_focus;
+  long _ustep_ha;
+  long _ustep_de;
+  long _ustep_focus;
+  float _ha_ustep_fraction;
+  float _de_ustep_fraction;
+  float _focus_ustep_fraction;
+  noInterrupts();
+  {
+    _clock = clock;
+    _ustep_speed_ha = ustep_speed_ha;
+    _ustep_speed_de = ustep_speed_de;
+    _ustep_speed_focus = ustep_speed_focus;
+    _ustep_ha = ustep_ha;
+    _ustep_de = ustep_de;
+    _ustep_focus = ustep_focus;
+    _ha_ustep_fraction = ha_ustep_fraction;
+    _de_ustep_fraction = de_ustep_fraction;
+    _focus_ustep_fraction = focus_ustep_fraction;
+  }
+  interrupts();
+
   int i = 0;
-  long ms_count = UPDATE_TIME_MS * clock;
+  long ms_count = UPDATE_TIME_MS * _clock;
   buffer[i++] = (byte)(ms_count >> 24);
   buffer[i++] = (byte)(ms_count >> 16);
   buffer[i++] = (byte)(ms_count >> 8);
@@ -37,23 +62,23 @@ void sendStatus() {
   //Serial.println(ms_count);
 
   // step = ustep/64
-  buffer[i++] = (byte)(ustep_ha >> 30);
-  buffer[i++] = (byte)(ustep_ha >> 22);
-  buffer[i++] = (byte)(ustep_ha >> 14);
-  buffer[i++] = (byte)(ustep_ha >> 6);
+  buffer[i++] = (byte)(_ustep_ha >> 30);
+  buffer[i++] = (byte)(_ustep_ha >> 22);
+  buffer[i++] = (byte)(_ustep_ha >> 14);
+  buffer[i++] = (byte)(_ustep_ha >> 6);
   //Serial.print("ustep_ha:");
   //Serial.println(ustep_ha);
 
   // step = ustep/64
-  buffer[i++] = (byte)(ustep_de >> 30);
-  buffer[i++] = (byte)(ustep_de >> 22);
-  buffer[i++] = (byte)(ustep_de >> 14);
-  buffer[i++] = (byte)(ustep_de >> 6);
+  buffer[i++] = (byte)(_ustep_de >> 30);
+  buffer[i++] = (byte)(_ustep_de >> 22);
+  buffer[i++] = (byte)(_ustep_de >> 14);
+  buffer[i++] = (byte)(_ustep_de >> 6);
   //Serial.print("ustep_de:");
   //Serial.println(ustep_de);
 
   // step fraction = ustep%64 * 16
-  float step_fraction_ha = (float) ((ustep_ha & 0x3F) << 4);
+  float step_fraction_ha = (float) ((_ustep_ha & 0x3F) << 4);
   buffer[i++] = (byte)((*(long*)&step_fraction_ha) >> 24);
   buffer[i++] = (byte)((*(long*)&step_fraction_ha) >> 16);
   buffer[i++] = (byte)((*(long*)&step_fraction_ha) >> 8);
@@ -61,7 +86,7 @@ void sendStatus() {
   //Serial.print("step_fraction_ha:");
   //Serial.println(step_fraction_ha);
 
-  float step_fraction_de = (float) ((ustep_de & 0x3F) << 4);
+  float step_fraction_de = (float) ((_ustep_de & 0x3F) << 4);
   buffer[i++] = (byte)((*(long*)&step_fraction_de) >> 24);
   buffer[i++] = (byte)((*(long*)&step_fraction_de) >> 16);
   buffer[i++] = (byte)((*(long*)&step_fraction_de) >> 8);
@@ -108,12 +133,12 @@ void sendStatus() {
 
   buffer[i++] = bulb_state;
 
-  buffer[i++] = (byte)(ustep_focus >> 30);
-  buffer[i++] = (byte)(ustep_focus >> 22);
-  buffer[i++] = (byte)(ustep_focus >> 14);
-  buffer[i++] = (byte)(ustep_focus >> 6);
+  buffer[i++] = (byte)(_ustep_focus >> 30);
+  buffer[i++] = (byte)(_ustep_focus >> 22);
+  buffer[i++] = (byte)(_ustep_focus >> 14);
+  buffer[i++] = (byte)(_ustep_focus >> 6);
 
-  float step_fraction_focus = (float) ((ustep_focus & 0x3F) << 4);
+  float step_fraction_focus = (float) ((_ustep_focus & 0x3F) << 4);
   buffer[i++] = (byte)((*(long*)&step_fraction_focus) >> 24);
   buffer[i++] = (byte)((*(long*)&step_fraction_focus) >> 16);
   buffer[i++] = (byte)((*(long*)&step_fraction_focus) >> 8);
@@ -130,11 +155,15 @@ void sendStatus() {
   for (i = 0; i < STATUS_MSG_SIZE - 1; i++) {
     buffer[STATUS_MSG_SIZE - 1] += buffer[i];
   }
+  //noInterrupts();
   Serial.write(0x55);
   Serial.write(buffer, STATUS_MSG_SIZE);
+  //interrupts();
+  delayMicroseconds(100);
+  //noInterrupts();
   Serial1.write(0x55);
   Serial1.write(buffer, STATUS_MSG_SIZE);
-
+  //interrupts();
 
 
 
@@ -184,7 +213,7 @@ void processCommand(byte* buffer) {
     power_aux3 = (buffer[20] << 8) + buffer[21];
     bulb_state = buffer[22];
 
-    updateOutputCtrl();
+    //updateOutputCtrl();
   }
 }
 

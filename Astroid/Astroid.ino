@@ -352,11 +352,26 @@ void loop(void) {
   static byte speed_change_done;
   int meas;
 
+  // local variables for atomic operations
+  long _clock;
+  float _ustep_speed_ha;
+  float _ustep_speed_de;
+  float _ustep_speed_focus;
+
+
+  noInterrupts();
+  {
+    _clock = clock;
+    _ustep_speed_ha = ustep_speed_ha;
+    _ustep_speed_de = ustep_speed_de;
+    _ustep_speed_focus = ustep_speed_focus;
+  }
+  interrupts();
 
   receiveCommand();
 
-  if (clock >= clock_state + TIMEOUT_STATE) {
-    clock_state = clock;
+  if (_clock >= clock_state + TIMEOUT_STATE) {
+    clock_state = _clock;
     digitalWrite(LED_PIN, HIGH);
     sendStatus();
     digitalWrite(LED_PIN, LOW);
@@ -375,7 +390,7 @@ void loop(void) {
 
 
 
-  
+
 
   //digitalWrite(BUZZER_PIN, LOW);
   joystick_speed_ha = 0;
@@ -388,9 +403,9 @@ void loop(void) {
   // down button pressed
   if (meas < (DOWN_V + RIGHT_V) * 102) { //*102 = /2 *1024 /5.0V
     if (button_value != DOWN)
-      button_chg_time = clock;
+      button_chg_time = _clock;
     button_value = DOWN;
-    if (clock - button_chg_time > BTN_DELAY * UPDATE_FREQ) {
+    if (_clock - button_chg_time > BTN_DELAY * UPDATE_FREQ) {
       joystick_speed_de = -joystick_speed;
     }
 
@@ -398,9 +413,9 @@ void loop(void) {
   }
   else if (meas < (RIGHT_V + UP_V) * 102) {
     if (button_value != RIGHT)
-      button_chg_time = clock;
+      button_chg_time = _clock;
     button_value = RIGHT;
-    if (clock - button_chg_time > BTN_DELAY * UPDATE_FREQ) {
+    if (_clock - button_chg_time > BTN_DELAY * UPDATE_FREQ) {
       joystick_speed_ha = joystick_speed;
     }
 
@@ -408,9 +423,9 @@ void loop(void) {
   }
   else if (meas < (UP_V + LEFT_V) * 102) {
     if (button_value != UP)
-      button_chg_time = clock;
+      button_chg_time = _clock;
     button_value = UP;
-    if (clock - button_chg_time > BTN_DELAY * UPDATE_FREQ) {
+    if (_clock - button_chg_time > BTN_DELAY * UPDATE_FREQ) {
       joystick_speed_de = joystick_speed;
     }
 
@@ -418,9 +433,9 @@ void loop(void) {
   }
   else if (meas < (LEFT_V + ENTER_V) * 102) {
     if (button_value != LEFT)
-      button_chg_time = clock;
+      button_chg_time = _clock;
     button_value = LEFT;
-    if (clock - button_chg_time > BTN_DELAY * UPDATE_FREQ) {
+    if (_clock - button_chg_time > BTN_DELAY * UPDATE_FREQ) {
       joystick_speed_ha = -joystick_speed;
     }
 
@@ -429,11 +444,11 @@ void loop(void) {
   else if (meas < (ENTER_V + UNCONNECTED_V) * 102) {
     if (button_value != ENTER) {
       speed_change_done = 0;
-      button_chg_time = clock;
+      button_chg_time = _clock;
     }
 
     button_value = ENTER;
-    if (clock - button_chg_time > BTN_DELAY * UPDATE_FREQ) {
+    if (_clock - button_chg_time > BTN_DELAY * UPDATE_FREQ) {
       if (speed_change_done == 0) {
         changeSpeed();
         speed_change_done = 1;
@@ -446,15 +461,18 @@ void loop(void) {
     button_value = UNCONNECTED;
   }
 
-  updateOutputCtrl();
+  // updated output control
+  _ustep_speed_ha = (move_speed_ha + joystick_speed_ha) * SIDERAL_RATE * UPDATE_TIME * 64.;
+  _ustep_speed_de = (move_speed_de + joystick_speed_de) * SIDERAL_RATE * UPDATE_TIME * 64.;
+  _ustep_speed_focus = move_speed_focus * UPDATE_TIME * 64.;
 
-
-}
-
-void updateOutputCtrl() {
-  ustep_speed_ha = (move_speed_ha + joystick_speed_ha) * SIDERAL_RATE * UPDATE_TIME * 64.;
-  ustep_speed_de = (move_speed_de + joystick_speed_de) * SIDERAL_RATE * UPDATE_TIME * 64.;
-  ustep_speed_focus = move_speed_focus * UPDATE_TIME * 64.;
+  noInterrupts();
+  {
+    ustep_speed_ha = _ustep_speed_ha;
+    ustep_speed_de = _ustep_speed_de;
+    ustep_speed_focus = _ustep_speed_focus;
+  }
+  interrupts();
 
   if (power_ha == 0. || (move_speed_ha + joystick_speed_ha == 0. && abs(power_ha) < 0.5)) {
     digitalWrite(HA_ENABLE_PIN, HIGH); // it's a !ENABLE pin
@@ -465,8 +483,8 @@ void updateOutputCtrl() {
 
   if (move_speed_de != 0. ||  joystick_speed_de != 0. || move_speed_focus == 0. || abs(power_de) > 1) {
     digitalWrite(DE_ENABLE_PIN, LOW); // it's a !ENABLE pin
-    last_dec_active = clock;
-  } else if (clock - last_dec_active < DEC_SLEEP_TIMEOUT) {
+    last_dec_active = _clock;
+  } else if (_clock - last_dec_active < DEC_SLEEP_TIMEOUT) {
     digitalWrite(DE_ENABLE_PIN, LOW); // it's a !ENABLE pin
   } else {
     digitalWrite(DE_ENABLE_PIN, HIGH); // it's a !ENABLE pin
