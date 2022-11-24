@@ -47,8 +47,8 @@
 #define AUX1_PIN       HEATER_BED_PIN
 #define AUX2_PIN       HEATER_END_PIN
 #define AUX3_PIN       FAN_PIN
-#define BULB_PIN      TEMP_BED_PIN
-#define REMOTE_PIN      TEMP_0_PIN
+#define BULB_PIN       TEMP_0_PIN
+#define REMOTE_PIN     TEMP_BED_PIN
 #define BUZZER_PIN     Y_MIN_PIN
 
 /* Go to sheet/remote astroid
@@ -100,10 +100,12 @@ float move_speed_ha = 1.;
 float move_speed_de = 0.;
 float joystick_speed_ha = 0.;
 float joystick_speed_de = 0.;
-float joystick_speed = SPEED_3;
-float move_speed_focus = 0;
+float joystick_speed_focus = 0.;
+float joystick_speeds[3][6]={{0.5, 4.0, 32.0, 256.0, 0.0, 0.0},{0.5, 4.0, 32.0, 256.0, 0.0, 0.0},{0.0, 0.0, 0.0, 0.0, 10., 100.}};
+int joystick_speed = 3;
+float move_speed_focus = 0.;
 float power_ha = 1.;
-float power_de = 1;
+float power_de = 1.;
 float power_focus = 0.;
 float ha_ustep_fraction = 0;
 float de_ustep_fraction = 0;
@@ -116,6 +118,7 @@ int counter_aux1 = 0;
 int counter_aux2 = 0;
 int counter_aux3 = 0;
 long last_dec_active = 0;
+
 
 void updateOutputCtrl();
 void delayms(int ms);
@@ -171,7 +174,7 @@ ISR(TIMER3_COMPA_vect ) {
   while (focus_ustep_fraction >= 1.) {
     focus_ustep_fraction -= 1.;
     digitalWrite(FOCUS_STEP_PIN, LOW);
-    digitalWrite(FOCUS_DIR_PIN, power_focus > 0);
+    digitalWrite(FOCUS_DIR_PIN, LOW);
     delayMicroseconds(2);
     digitalWrite(FOCUS_STEP_PIN, HIGH);
     ustep_focus++;
@@ -180,7 +183,7 @@ ISR(TIMER3_COMPA_vect ) {
   while (focus_ustep_fraction <= -1.) {
     focus_ustep_fraction += 1.;
     digitalWrite(FOCUS_STEP_PIN, LOW);
-    digitalWrite(FOCUS_DIR_PIN, power_focus < 0);
+    digitalWrite(FOCUS_DIR_PIN, HIGH);
     delayMicroseconds(2);
     digitalWrite(FOCUS_STEP_PIN, HIGH);
     ustep_focus--;
@@ -291,55 +294,71 @@ void setup(void) {
 
 
 void changeSpeed() {
-  if (joystick_speed == SPEED_4) {
-    joystick_speed = SPEED_1;
+  if (joystick_speed == 5) {
+    joystick_speed = 0;
     digitalWrite(BUZZER_PIN, HIGH);
-    delayms(50);
+    delayms(100);
     digitalWrite(BUZZER_PIN, LOW);
 
   }
-  else if (joystick_speed == SPEED_1) {
-    joystick_speed = SPEED_2;
+  else if (joystick_speed == 0) {
+    joystick_speed = 1;
     digitalWrite(BUZZER_PIN, HIGH);
-    delayms(50);
+    delayms(100);
     digitalWrite(BUZZER_PIN, LOW);
-    delayms(50);
+    delayms(100);
     digitalWrite(BUZZER_PIN, HIGH);
-    delayms(50);
-    digitalWrite(BUZZER_PIN, LOW);
-
-  }
-  else if (joystick_speed == SPEED_2) {
-    joystick_speed = SPEED_3;
-    digitalWrite(BUZZER_PIN, HIGH);
-    delayms(50);
-    digitalWrite(BUZZER_PIN, LOW);
-    delayms(50);
-    digitalWrite(BUZZER_PIN, HIGH);
-    delayms(50);
-    digitalWrite(BUZZER_PIN, LOW);
-    delayms(50);
-    digitalWrite(BUZZER_PIN, HIGH);
-    delayms(50);
+    delayms(100);
     digitalWrite(BUZZER_PIN, LOW);
 
   }
-  else if (joystick_speed == SPEED_3) {
-    joystick_speed = SPEED_4;
+  else if (joystick_speed == 1) {
+    joystick_speed = 2;
     digitalWrite(BUZZER_PIN, HIGH);
-    delayms(50);
+    delayms(100);
     digitalWrite(BUZZER_PIN, LOW);
-    delayms(50);
+    delayms(100);
     digitalWrite(BUZZER_PIN, HIGH);
-    delayms(50);
+    delayms(100);
     digitalWrite(BUZZER_PIN, LOW);
-    delayms(50);
+    delayms(100);
     digitalWrite(BUZZER_PIN, HIGH);
-    delayms(50);
+    delayms(100);
     digitalWrite(BUZZER_PIN, LOW);
-    delayms(50);
+
+  }
+  else if (joystick_speed == 2) {
+    joystick_speed = 3;
     digitalWrite(BUZZER_PIN, HIGH);
-    delayms(50);
+    delayms(100);
+    digitalWrite(BUZZER_PIN, LOW);
+    delayms(100);
+    digitalWrite(BUZZER_PIN, HIGH);
+    delayms(100);
+    digitalWrite(BUZZER_PIN, LOW);
+    delayms(100);
+    digitalWrite(BUZZER_PIN, HIGH);
+    delayms(100);
+    digitalWrite(BUZZER_PIN, LOW);
+    delayms(100);
+    digitalWrite(BUZZER_PIN, HIGH);
+    delayms(100);
+    digitalWrite(BUZZER_PIN, LOW);
+  }
+  else if (joystick_speed == 3) {
+    joystick_speed = 4;
+    digitalWrite(BUZZER_PIN, HIGH);
+    delayms(500);
+    digitalWrite(BUZZER_PIN, LOW);
+  }
+  else if (joystick_speed == 4) {
+    joystick_speed = 5;
+    digitalWrite(BUZZER_PIN, HIGH);
+    delayms(500);
+    digitalWrite(BUZZER_PIN, LOW);
+    delayms(500);
+    digitalWrite(BUZZER_PIN, HIGH);
+    delayms(500);
     digitalWrite(BUZZER_PIN, LOW);
   }
 
@@ -374,6 +393,8 @@ void loop(void) {
     clock_state = _clock;
     digitalWrite(LED_PIN, HIGH);
     sendStatus();
+    //Serial.println(_clock);
+    //Serial1.println(_clock);
     digitalWrite(LED_PIN, LOW);
   }
 
@@ -395,53 +416,50 @@ void loop(void) {
   //digitalWrite(BUZZER_PIN, LOW);
   joystick_speed_ha = 0;
   joystick_speed_de = 0;
+  joystick_speed_focus = 0;
 
   // --- Process 1st joystick port ---
   meas = analogRead(REMOTE_PIN);
+  //Serial.println(meas);
 
 
-  // down button pressed
-  if (meas < (DOWN_V + RIGHT_V) * 102) { //*102 = /2 *1024 /5.0V
-    if (button_value != DOWN)
-      button_chg_time = _clock;
-    button_value = DOWN;
-    if (_clock - button_chg_time > BTN_DELAY * UPDATE_FREQ) {
-      joystick_speed_de = -joystick_speed;
-    }
-
-    // right button pressed
-  }
-  else if (meas < (RIGHT_V + UP_V) * 102) {
-    if (button_value != RIGHT)
-      button_chg_time = _clock;
-    button_value = RIGHT;
-    if (_clock - button_chg_time > BTN_DELAY * UPDATE_FREQ) {
-      joystick_speed_ha = joystick_speed;
-    }
-
-    // up button pressed
-  }
-  else if (meas < (UP_V + LEFT_V) * 102) {
+  if (2*meas < 132) {  // up button pressed = 0
     if (button_value != UP)
       button_chg_time = _clock;
     button_value = UP;
     if (_clock - button_chg_time > BTN_DELAY * UPDATE_FREQ) {
-      joystick_speed_de = joystick_speed;
-    }
-
-    // left button pressed
+      joystick_speed_de = joystick_speeds[0][joystick_speed];
+      joystick_speed_focus = joystick_speeds[2][joystick_speed];
+      
+    }  
   }
-  else if (meas < (LEFT_V + ENTER_V) * 102) {
+  else if (2*meas < 132+250) { // left button pressed = 132
     if (button_value != LEFT)
       button_chg_time = _clock;
     button_value = LEFT;
     if (_clock - button_chg_time > BTN_DELAY * UPDATE_FREQ) {
-      joystick_speed_ha = -joystick_speed;
+      joystick_speed_ha = -joystick_speeds[1][joystick_speed];
     }
-
-    // enter button pressed
   }
-  else if (meas < (ENTER_V + UNCONNECTED_V) * 102) {
+  else if (2*meas < 250+377) { // down button pressed = 250
+    if (button_value != DOWN)
+      button_chg_time = _clock;
+    button_value = DOWN;
+    if (_clock - button_chg_time > BTN_DELAY * UPDATE_FREQ) {
+      joystick_speed_de = -joystick_speeds[0][joystick_speed];
+      joystick_speed_focus = -joystick_speeds[2][joystick_speed];
+      
+    }
+  }
+  else if (2*meas < 377+506) { // right button pressed = 377
+    if (button_value != RIGHT)
+      button_chg_time = _clock;
+    button_value = RIGHT;
+    if (_clock - button_chg_time > BTN_DELAY * UPDATE_FREQ) {
+      joystick_speed_ha = joystick_speeds[1][joystick_speed];
+    }
+  }
+  else if (2*meas < 506+1023) {  // enter button pressed = 506
     if (button_value != ENTER) {
       speed_change_done = 0;
       button_chg_time = _clock;
@@ -459,12 +477,18 @@ void loop(void) {
   }
   else {
     button_value = UNCONNECTED;
+    joystick_speed_ha = 0.;
+    joystick_speed_de = 0.;
+    joystick_speed_focus = 0.;
   }
 
+  //Serial.println(joystick_speed_focus);
+  //Serial.println(button_value);
+  
   // updated output control
   _ustep_speed_ha = (move_speed_ha + joystick_speed_ha) * SIDERAL_RATE * UPDATE_TIME * 64.;
   _ustep_speed_de = (move_speed_de + joystick_speed_de) * SIDERAL_RATE * UPDATE_TIME * 64.;
-  _ustep_speed_focus = move_speed_focus * UPDATE_TIME * 64.;
+  _ustep_speed_focus = (move_speed_focus + joystick_speed_focus) *  UPDATE_TIME * 64.;
 
   noInterrupts();
   {
@@ -481,7 +505,7 @@ void loop(void) {
     digitalWrite(HA_ENABLE_PIN, LOW); // it's a !ENABLE pin
   }
 
-  if (move_speed_de != 0. ||  joystick_speed_de != 0. || move_speed_focus == 0. || abs(power_de) > 1) {
+  if (move_speed_de != 0. ||  joystick_speed_de != 0. || move_speed_focus == 0. || abs(power_de) > 1 || joystick_speed_focus !=0.) {
     digitalWrite(DE_ENABLE_PIN, LOW); // it's a !ENABLE pin
     last_dec_active = _clock;
   } else if (_clock - last_dec_active < DEC_SLEEP_TIMEOUT) {
